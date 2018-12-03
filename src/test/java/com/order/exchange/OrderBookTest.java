@@ -179,7 +179,7 @@ public class OrderBookTest {
         set.add(new Thread(() -> clientFoo.placeOrder(new OrderRequest("FOO-ORDER-11", "FOO", OrderSide.OFFER, "GOOGL", 1047.11, 500000))));
 
         for (Thread th : set) {
-            th.run();
+            th.start();
         }
 
         for (Thread th : set) {
