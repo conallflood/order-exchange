@@ -20,8 +20,7 @@ public class SingleTickerSymbolBook implements OrderBook {
     private ReentrantLock lock = new ReentrantLock();
 
     /**
-     * @param tickerSymbol
-     * Constucts a SingleTickerSymbolBook
+     * @param tickerSymbol Constucts a SingleTickerSymbolBook
      */
     SingleTickerSymbolBook(String tickerSymbol) {
 
@@ -32,29 +31,28 @@ public class SingleTickerSymbolBook implements OrderBook {
     }
 
     /**
-     * @param newOrder
-     * submits an order to the book and kicks off matching if needed
+     * @param newOrder submits an order to the book and kicks off matching if needed
      */
     void submitOrder(Order newOrder) {
 
-            // TODO - Need to think about making this lock more fine grained to improve performance
+        // TODO - Need to think about making this lock more fine grained to improve performance
         try {
             lock.lock();
-        OrderSide side = newOrder.getSide();
 
-        ConcurrentMap<OrderPrice, List> whichMap = side.equals(OrderSide.BID) ? allBidsAtPrice : allOffersAtPrice;
+            OrderSide side = newOrder.getSide();
 
-        whichMap.compute(newOrder.getPrice(), (orderPrice, orderLiquidityAtPrice) -> {
-            if (orderLiquidityAtPrice == null) {
-                return new ArrayList<>(Arrays.asList(newOrder));
-            } else {
-                orderLiquidityAtPrice.add(newOrder);
-            }
-            return orderLiquidityAtPrice;
-        });
+            ConcurrentMap<OrderPrice, List> whichMap = side.equals(OrderSide.BID) ? allBidsAtPrice : allOffersAtPrice;
 
-        LOGGER.info("Order Placed " + newOrder);
+            whichMap.compute(newOrder.getPrice(), (orderPrice, orderLiquidityAtPrice) -> {
+                if (orderLiquidityAtPrice == null) {
+                    return new ArrayList<>(Arrays.asList(newOrder));
+                } else {
+                    orderLiquidityAtPrice.add(newOrder);
+                }
+                return orderLiquidityAtPrice;
+            });
 
+            LOGGER.info("Order Placed " + newOrder);
 
 
             List<Order> bidlist = checkForMatches(newOrder, OrderSide.BID);
@@ -64,15 +62,14 @@ public class SingleTickerSymbolBook implements OrderBook {
                 executeMatchesOnSide(newOrder.getSize(), bidlist, offerList);
             }
 
-        }finally {
+        } finally {
             lock.unlock();
         }
     }
 
     /**
-     *
-     * @param newOrder - the newly placed order
-     * @param sidetoCheck  the side BID or OFFER
+     * @param newOrder    - the newly placed order
+     * @param sidetoCheck the side BID or OFFER
      * @return a list of possible matches from one side of the book
      */
     private List<Order> checkForMatches(Order newOrder, OrderSide sidetoCheck) {
@@ -114,16 +111,16 @@ public class SingleTickerSymbolBook implements OrderBook {
                 order.setSize(amountToMatch - alreadyMatched);
                 alreadyMatched += order.getSize();
             }
-            if (alreadyMatched == amountToMatch){
+            if (alreadyMatched == amountToMatch) {
                 break;
             }
         }
     }
 
-    private void removeOrderFromBook(Order order){
+    private void removeOrderFromBook(Order order) {
 
-        if (order.getSide().equals(OrderSide.BID)){
-            List queue =  allBidsAtPrice.get(order.getPrice());
+        if (order.getSide().equals(OrderSide.BID)) {
+            List queue = allBidsAtPrice.get(order.getPrice());
             if (queue != null) {
                 if (queue.size() == 1) {
                     allBidsAtPrice.remove(order.getPrice());
@@ -131,8 +128,8 @@ public class SingleTickerSymbolBook implements OrderBook {
                     queue.remove(order);
                 }
             }
-        } else{
-            List queue =  allOffersAtPrice.get(order.getPrice());
+        } else {
+            List queue = allOffersAtPrice.get(order.getPrice());
             if (queue != null) {
                 if (queue.size() == 1) {
                     allOffersAtPrice.remove(order.getPrice());
@@ -156,7 +153,7 @@ public class SingleTickerSymbolBook implements OrderBook {
     @Override
     public List[] getTopOfBook() {
 
-        return new List[] {allBidsAtPrice.entrySet().iterator().next().getValue(),
-                            allOffersAtPrice.entrySet().iterator().next().getValue()} ;
+        return new List[]{allBidsAtPrice.entrySet().iterator().next().getValue(),
+                allOffersAtPrice.entrySet().iterator().next().getValue()};
     }
 }
