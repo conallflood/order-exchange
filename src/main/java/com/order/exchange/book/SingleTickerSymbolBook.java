@@ -37,6 +37,9 @@ public class SingleTickerSymbolBook implements OrderBook {
      */
     void submitOrder(Order newOrder) {
 
+            // TODO - Need to think about making this lock more fine grained to improve performance
+        try {
+            lock.lock();
         OrderSide side = newOrder.getSide();
 
         ConcurrentMap<OrderPrice, List> whichMap = side.equals(OrderSide.BID) ? allBidsAtPrice : allOffersAtPrice;
@@ -52,9 +55,7 @@ public class SingleTickerSymbolBook implements OrderBook {
 
         LOGGER.info("Order Placed " + newOrder);
 
-        // TODO - Need to think about making this lock more fine grained to improve performance
-        try {
-            lock.lock();
+
 
             List<Order> bidlist = checkForMatches(newOrder, OrderSide.BID);
             List<Order> offerList = checkForMatches(newOrder, OrderSide.OFFER);
